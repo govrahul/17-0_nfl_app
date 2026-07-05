@@ -1,0 +1,23 @@
+services:
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    environment:
+      - LOG_LEVEL=info
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8191/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  scraper:
+    build: .
+    environment:
+      - FLARESOLVERR_URL=http://flaresolverr:8191/v1
+    volumes:
+      - ./Scrapers/Data:/app/Scrapers/Data
+    depends_on:
+      flaresolverr:
+        condition: service_healthy
