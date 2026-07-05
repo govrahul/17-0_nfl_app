@@ -4,14 +4,23 @@ import pandas as pd
 from io import StringIO
 import os
 
+FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
+
+def fetch_html(url):
+    resp = requests.post(FLARESOLVERR_URL, json={
+        "cmd": "request.get",
+        "url": url,
+        "maxTimeout": 60000,
+    })
+    resp.raise_for_status()
+    data = resp.json()
+    if data.get("status") != "ok":
+        raise RuntimeError(f"FlareSolverr error fetching {url}: {data.get('message')}")
+    return data["solution"]["response"]
+
 def fetch_team_info(team_id, year):
     url = f"https://www.pro-football-reference.com/teams/{team_id}/{year}.htm"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
-    resp = requests.get(url, headers=headers)
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
+    soup = BeautifulSoup(fetch_html(url), "html.parser")
 
     def get_table_by_id(table_id):
         table = soup.find("table", id=table_id)
