@@ -3,13 +3,21 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from io import StringIO
 import os
+from pathlib import Path
+import time
+
+from helpers import TEAM_IDS, YEARS
 
 FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
+
+# create a session for efficiency when looping
+session_resp = requests.post(FLARESOLVERR_URL, json={"cmd": "sessions.create", "session": "nfl_scraper"})
 
 def fetch_html(url):
     resp = requests.post(FLARESOLVERR_URL, json={
         "cmd": "request.get",
         "url": url,
+        "session": "nfl_scraper",
         "maxTimeout": 60000,
     })
     resp.raise_for_status()
@@ -39,7 +47,29 @@ def fetch_team_info(team_id, year):
     return games, passing, rushing_receiving
 
 if __name__ == "__main__":
-    games, passing, rushing_receiving = fetch_team_info("det", 2024)
+    games, passing, rushing_receiving = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+
+    # safely iterate over TEAM_IDS and YEARS, catching exceptions to avoid stopping the entire process
+    for team_id in TEAM_IDS:
+        for year in YEARS:
+            try:
+                g, p, rr = fetch_team_info(team_id, year)
+                # add year and team column to each data frame with year value
+                g['Year'] = year
+                g['Team'] = team_id
+                p['Year'] = year
+                p['Team'] = team_id
+                rr['Year'] = year
+                rr['Team'] = team_id
+
+                games = pd.concat([games, g], ignore_index=True)
+                passing = pd.concat([passing, p], ignore_index=True)
+                rushing_receiving = pd.concat([rushing_receiving, rr], ignore_index=True)
+            except Exception as e:
+                # some teams don't have specific years, catch exception and move on
+                print(f"Error fetching data for {team_id} in {year}: {e}")
+        time.sleep(1)
+        #print(f"Completed data scrape for team {team_id}")
 
     print("=== 2024 Seasons ===")
     print(games.head())
@@ -52,9 +82,14 @@ if __name__ == "__main__":
     print(rushing_receiving.head())
 
     # Optional: Save to CSV
-    # set data folder path
-    DATA = os.path.join(os.path.dirname(__file__), "Data")
+    current_dir = Path(__file__).resolve().parent
+    root_dir = current_dir.parent
+    DATA = os.path.join(root_dir, "Data")
+    os.makedirs(DATA, exist_ok=True)
 
-    games.to_csv(os.path.join(DATA, "lions_2024_season.csv"), index=False)
-    passing.to_csv(os.path.join(DATA, "lions_2024_passing.csv"), index=False)
-    rushing_receiving.to_csv(os.path.join(DATA, "lions_2024_rushing_receiving.csv"), index=False)
+    games.to_csv(os.path.join(DATA, "seasons.csv"), index=False)
+    passing.to_csv(os.path.join(DATA, "passing.csv"), index=False)
+    rushing_receiving.to_csv(os.path.join(DATA, "rushing_receiving.csv"), index=False)
+
+    # Clean up the session after scraping is complete
+    requests.post(FLARESOLVERR_URL, json={"cmd": "sessions.destroy", "session": "nfl_scraper"})

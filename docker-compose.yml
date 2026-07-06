@@ -17,7 +17,7 @@ services:
     environment:
       - FLARESOLVERR_URL=http://flaresolverr:8191/v1
     volumes:
-      - ./Scrapers/Data:/app/Scrapers/Data
+      - ./Scrapers/Data:/app/Data
     depends_on:
       flaresolverr:
         condition: service_healthy
