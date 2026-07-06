@@ -68,7 +68,7 @@ if __name__ == "__main__":
             except Exception as e:
                 # some teams don't have specific years, catch exception and move on
                 print(f"Error fetching data for {team_id} in {year}: {e}")
-        time.sleep(1)
+            time.sleep(1)
         #print(f"Completed data scrape for team {team_id}")
 
     print("=== 2024 Seasons ===")
