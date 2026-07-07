@@ -33,6 +33,8 @@ def fetch_team_info(team_id, year):
     def get_table_by_id(table_id):
         table = soup.find("table", id=table_id)
         if table is None:
+            if "rate limited" in soup.get_text().lower() or len(str(soup)) < 50000: # check for rate limiting
+                raise RuntimeError(f"RATE LIMITED on {table_id} — increase delay")
             raise RuntimeError(f"Table with id '{table_id}' not found")
         df = pd.read_html(StringIO(str(table)))[0]
         # Remove repeated header rows if any
@@ -68,17 +70,17 @@ if __name__ == "__main__":
             except Exception as e:
                 # some teams don't have specific years, catch exception and move on
                 print(f"Error fetching data for {team_id} in {year}: {e}")
-            time.sleep(1)
+            time.sleep(3.5)
         #print(f"Completed data scrape for team {team_id}")
 
-    print("=== 2024 Seasons ===")
+    print("=== Seasons ===")
     print(games.head())
 
-    print("\n=== 2024 Passing Stats ===")
+    print("\n=== Passing Stats ===")
     print(passing.head())
 
 
-    print("\n=== 2024 Rushing and Receiving Stats ===")
+    print("\n=== Rushing and Receiving Stats ===")
     print(rushing_receiving.head())
 
     # Optional: Save to CSV
