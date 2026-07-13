@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-combined_stats = pd.read_csv('Data/combined_team_player_stats.csv')
+combined_stats = pd.read_csv('Data/reg_combined_team_player_stats.csv')
 combined_stats["TD/INT"] = combined_stats["passing_tds"] / combined_stats["passing_interceptions"]
 combined_stats["Total_Yards"] = (
     combined_stats['passing_yards'].fillna(0) +
@@ -87,7 +87,7 @@ flex_pool["FLEX_Volume"] = np.where(
     flex_pool["carries"],
     flex_pool["target_share"],
 )
-
+'''
 # 1. Separate the pool by position to calculate independent means and standard deviations
 flex_rb = flex_pool[flex_pool["position"] == "RB"].copy()
 flex_pass = flex_pool[flex_pool["position"].isin(["WR", "TE"])].copy()
@@ -106,7 +106,7 @@ flex_pass["standardized_volume"] = (
 
 # 4. Merge them back into a single normalized pool
 flex_pool = pd.concat([flex_rb, flex_pass])
-
+'''
 
 # Sort the mixed pool by the unified temporary columns
 flex_pool = flex_pool.sort_values(
@@ -119,7 +119,7 @@ flex_pool["Flex_Rank"] = flex_pool.groupby(["season", "Team"]).cumcount()
 flex = flex_pool[flex_pool["Flex_Rank"] == 0].copy()
 
 # Dynamically assign volume and rename raw production columns for the wide matrix
-flex["FLEX_Volume"] = flex['standardized_volume']
+#flex["FLEX_Volume"] = flex['standardized_volume']
 flex["FLEX_Yards"] = flex["flex_yards"]
 flex["FLEX_TDs"] = flex["flex_tds"]
 
@@ -161,4 +161,4 @@ final_dataset = merge_slot_to_wide(
 final_dataset = final_dataset.dropna(how='any', subset=final_dataset.select_dtypes(include=["object", "string"]).columns)
 final_dataset.fillna(0, inplace=True)
 print(final_dataset.head())
-final_dataset.to_csv("Data/model_training_dataset.csv", index=False)
+final_dataset.to_csv("Data/unnormalized_model_training_dataset.csv", index=False)

@@ -24,11 +24,11 @@ years = list(range(1999, 2026)) # acceptable year range for this dataset is 1999
 
 # load data
 schedules = nfl.load_schedules(seasons=years).to_pandas()
-player_stats = nfl.load_player_stats(seasons=years,summary_level='reg+post').to_pandas()
-team_stats = nfl.load_team_stats(seasons=years,summary_level='reg+post').to_pandas()
+player_stats = nfl.load_player_stats(seasons=years,summary_level='reg').to_pandas()
+team_stats = nfl.load_team_stats(seasons=years,summary_level='reg').to_pandas()
 
 # save to CSVs
 os.makedirs('Data', exist_ok=True)
 schedules.to_csv('Data/schedules.csv', index=False)
-player_stats.to_csv('Data/player_stats.csv', index=False)
-team_stats.to_csv('Data/team_stats.csv', index=False)
+player_stats.to_csv('Data/reg_player_stats.csv', index=False)
+team_stats.to_csv('Data/reg_team_stats.csv', index=False)
