@@ -10,4 +10,3 @@ pyarrow
 
 # Uncomment below if doing modeling
 # scikit-learn
-# xgboost
