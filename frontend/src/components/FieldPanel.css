@@ -1,0 +1,49 @@
+.field-panel {
+  width: 920px;
+  flex-shrink: 0;
+  background: var(--navy-800);
+  border-radius: 16px;
+  padding: 30px 24px;
+}
+
+.field-stage {
+  position: relative;
+  width: 872px;
+  height: 840px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.base-team-block {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+.base-team-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--white);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  margin: 0;
+}
+
+.base-team-title.muted {
+  font-size: 18px;
+  color: var(--gray-300);
+  text-shadow: none;
+}
+
+.slot-anchor {
+  position: absolute;
+}

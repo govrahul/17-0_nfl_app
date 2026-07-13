@@ -1,6 +1,17 @@
 services:
+  game:
+    build:
+      context: .
+      dockerfile: Dockerfile.game
+    ports:
+      - "8000:8000"
+
+  # Data-refresh pipeline -- not needed to play the game (Data/game_pool.json
+  # is already committed), only run this if you want to pull fresh seasons.
+  # Usage: docker compose --profile scrape up scraper
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
+    profiles: ["scrape"]
     environment:
       - LOG_LEVEL=info
     ports:
@@ -14,6 +25,7 @@ services:
 
   scraper:
     build: .
+    profiles: ["scrape"]
     environment:
       - FLARESOLVERR_URL=http://flaresolverr:8191/v1
     volumes:

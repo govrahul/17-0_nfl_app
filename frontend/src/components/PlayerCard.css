@@ -1,0 +1,82 @@
+.player-card {
+  width: 170px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--gray-900);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.top-row {
+  display: flex;
+  height: 156px;
+}
+
+.photo-area {
+  width: 60%;
+  background: var(--navy-700);
+}
+
+.stats-area {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.stats-area.default {
+  background: var(--navy-600);
+}
+
+.position-chip {
+  background: var(--gray-900);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.stat-chip {
+  background: var(--gray-900);
+  border-radius: 8px;
+  padding: 4px 8px;
+  text-align: center;
+  min-width: 44px;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--gray-300);
+}
+
+.name-banner {
+  background: var(--navy-800);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  padding: 8px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-card.placeholder {
+  opacity: 0.6;
+}
+
+.player-card.placeholder .position-chip,
+.player-card.placeholder .stat-chip {
+  background: transparent;
+  padding: 0;
+}

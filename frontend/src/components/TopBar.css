@@ -1,0 +1,10 @@
+.top-bar {
+  height: 22px;
+}
+
+.round-label {
+  font-family: 'Barlow', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--white);
+}
