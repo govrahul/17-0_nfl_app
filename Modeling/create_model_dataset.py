@@ -3,6 +3,16 @@ import numpy as np
 
 combined_stats = pd.read_csv('Data/combined_team_player_stats.csv')
 combined_stats["TD/INT"] = combined_stats["passing_tds"] / combined_stats["passing_interceptions"]
+combined_stats["Total_Yards"] = (
+    combined_stats['passing_yards'].fillna(0) +
+    combined_stats['rushing_yards'].fillna(0) +
+    combined_stats['receiving_yards'].fillna(0)
+)
+combined_stats["Total_TDs"] = (
+    combined_stats['passing_tds'].fillna(0) +
+    combined_stats['rushing_tds'].fillna(0) +
+    combined_stats['receiving_tds'].fillna(0)
+)
 
 team_win_pcts = combined_stats[["season", "Team", "Win_Pct"]].drop_duplicates()
 
@@ -18,10 +28,10 @@ base_features = pd.merge(
 ranked_positions = []
 
 sorting_rules = [
-    ("QB", ["passing_yards", "passing_tds", "TD/INT"], [False, False, False]),  # More TD_INT is better
-    ("RB", ["rushing_yards", "rushing_tds", "carries"], [False, False, False]),
-    ("WR", ["receiving_yards", "receiving_tds", "target_share"], [False, False, False]),
-    ("TE", ["receiving_yards", "receiving_tds", "target_share"], [False, False, False])
+    ("QB", ["Total_Yards", "Total_TDs", "TD/INT"], [False, False, False]),  # More TD_INT is better
+    ("RB", ["Total_Yards", "Total_TDs", "carries"], [False, False, False]),
+    ("WR", ["Total_Yards", "Total_TDs", "target_share"], [False, False, False]),
+    ("TE", ["Total_Yards", "Total_TDs", "target_share"], [False, False, False])
 ]
 
 for pos, sort_cols, asc_rules in sorting_rules:
@@ -69,23 +79,15 @@ flex_pool = combined_stats[
     & combined_stats["position"].isin(["RB", "WR", "TE"])
 ].copy()
 
-# Fix the column mismatch by creating unified temporary columns for the pool
-flex_pool["flex_yards"] = np.where(
-    flex_pool["position"] == "RB",
-    flex_pool["rushing_yards"],
-    flex_pool["receiving_yards"],
-)
-flex_pool["flex_tds"] = np.where(
-    flex_pool["position"] == "RB",
-    flex_pool["rushing_tds"],
-    flex_pool["receiving_tds"],
-)
+# Use unified columns for flex players
+flex_pool["flex_yards"] = flex_pool['Total_Yards']
+flex_pool["flex_tds"] = flex_pool['Total_TDs']
 flex_pool["FLEX_Volume"] = np.where(
     flex_pool["position"] == "RB",
     flex_pool["carries"],
     flex_pool["target_share"],
 )
-'''
+
 # 1. Separate the pool by position to calculate independent means and standard deviations
 flex_rb = flex_pool[flex_pool["position"] == "RB"].copy()
 flex_pass = flex_pool[flex_pool["position"].isin(["WR", "TE"])].copy()
@@ -104,7 +106,7 @@ flex_pass["standardized_volume"] = (
 
 # 4. Merge them back into a single normalized pool
 flex_pool = pd.concat([flex_rb, flex_pass])
-'''
+
 
 # Sort the mixed pool by the unified temporary columns
 flex_pool = flex_pool.sort_values(
@@ -117,7 +119,7 @@ flex_pool["Flex_Rank"] = flex_pool.groupby(["season", "Team"]).cumcount()
 flex = flex_pool[flex_pool["Flex_Rank"] == 0].copy()
 
 # Dynamically assign volume and rename raw production columns for the wide matrix
-#flex["FLEX_Volume"] = flex['standardized_volume']
+flex["FLEX_Volume"] = flex['standardized_volume']
 flex["FLEX_Yards"] = flex["flex_yards"]
 flex["FLEX_TDs"] = flex["flex_tds"]
 
@@ -137,16 +139,16 @@ def merge_slot_to_wide(base_df, slot_df, prefix, stats_to_keep):
 # Sequentially append prefixed positions to wide matrix
 final_dataset = base_features.copy()
 final_dataset = merge_slot_to_wide(
-    final_dataset, qbs, "QB", ["player_name", "passing_yards", "passing_tds", "TD/INT"]
+    final_dataset, qbs, "QB", ["player_name", "Total_Yards", "Total_TDs", "TD/INT"]
 )
 final_dataset = merge_slot_to_wide(
-    final_dataset, rbs, "RB", ["player_name", "rushing_yards", "rushing_tds", "carries"]
+    final_dataset, rbs, "RB", ["player_name", "Total_Yards", "Total_TDs", "carries"]
 )
 final_dataset = merge_slot_to_wide(
-    final_dataset, wr1, "WR1", ["player_name", "receiving_yards", "receiving_tds", "target_share"]
+    final_dataset, wr1, "WR1", ["player_name", "Total_Yards", "Total_TDs", "target_share"]
 )
 final_dataset = merge_slot_to_wide(
-    final_dataset, wr2, "WR2", ["player_name", "receiving_yards", "receiving_tds", "target_share"]
+    final_dataset, wr2, "WR2", ["player_name", "Total_Yards", "Total_TDs", "target_share"]
 )
 final_dataset = merge_slot_to_wide(
     final_dataset,
@@ -159,4 +161,4 @@ final_dataset = merge_slot_to_wide(
 final_dataset = final_dataset.dropna(how='any', subset=final_dataset.select_dtypes(include=["object", "string"]).columns)
 final_dataset.fillna(0, inplace=True)
 print(final_dataset.head())
-final_dataset.to_csv("Data/unnormalized_model_training_dataset.csv", index=False)
+final_dataset.to_csv("Data/model_training_dataset.csv", index=False)
