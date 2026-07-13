@@ -1,7 +1,13 @@
 pandas
 numpy
-requests
-bs4
 lxml
 nflreadpy
 pyarrow
+
+# Uncomment below if using BeautifulSoup scraper for sports reference
+#requests
+#bs4
+
+# Uncomment below if doing modeling
+# scikit-learn
+# xgboost
