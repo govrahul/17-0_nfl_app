@@ -2,7 +2,7 @@
 __pycache__/
 *.pyc
 Scrapers/Data/
-Data/
+Data/*
 !Data/game_pool.json
 
 .vscode/
