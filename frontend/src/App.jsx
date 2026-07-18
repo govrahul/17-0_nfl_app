@@ -8,6 +8,8 @@ import ResultOverlay from './components/ResultOverlay'
 import './App.css'
 
 const emptySlots = () => ({ TEAM: null, QB: null, RB: null, WR1: null, WR2: null, FLEX: null })
+const MAX_BASE_ROLLS = 5
+const MAX_REROLLS = 2
 
 export default function App() {
   const [round, setRound] = useState(1)
@@ -19,8 +21,12 @@ export default function App() {
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
   const [predicting, setPredicting] = useState(false)
+  const [baseRollsUsed, setBaseRollsUsed] = useState(1)
+  const [bonusRerollsUsed, setBonusRerollsUsed] = useState(0)
 
   const gameComplete = Object.values(slots).filter(Boolean).length === SLOT_ORDER.length
+  const baseRollsRemaining = Math.max(0, MAX_BASE_ROLLS - baseRollsUsed)
+  const bonusRerollsRemaining = Math.max(0, MAX_REROLLS - bonusRerollsUsed)
 
   async function loadNextTeam(excludeIds, pinOptions) {
     setLoading(true)
@@ -40,14 +46,11 @@ export default function App() {
     loadNextTeam([])
   }, [])
 
-  function handleRerollTeam() {
-    // keep the season, roll a new franchise
-    loadNextTeam(usedTeamIds, { pinSeason: pool.team.season })
-  }
+  function handleRerollCombo() {
+    if (loading || bonusRerollsRemaining === 0) return
 
-  function handleRerollDecade() {
-    // keep the franchise, roll a new season
-    loadNextTeam(usedTeamIds, { pinTeam: pool.team.team })
+    setBonusRerollsUsed((count) => count + 1)
+    loadNextTeam(usedTeamIds)
   }
 
   function commitPick(slotKey, value) {
@@ -56,6 +59,10 @@ export default function App() {
     setSlots(nextSlots)
     setUsedTeamIds(nextUsed)
     setRound((r) => r + 1)
+
+    if (baseRollsUsed < MAX_BASE_ROLLS) {
+      setBaseRollsUsed((count) => count + 1)
+    }
 
     const nextFilledCount = Object.values(nextSlots).filter(Boolean).length
     if (nextFilledCount === SLOT_ORDER.length) {
@@ -99,6 +106,8 @@ export default function App() {
     setUsedTeamIds([])
     setSlots(emptySlots())
     setResult(null)
+    setBaseRollsUsed(1)
+    setBonusRerollsUsed(0)
     loadNextTeam([])
   }
 
@@ -117,9 +126,10 @@ export default function App() {
           onPickSlot={pickPlayerSlot}
           onPickTeam={pickTeam}
           eligibleSlots={eligibleSlots}
-          onRerollTeam={handleRerollTeam}
-          onRerollDecade={handleRerollDecade}
-          rerollDisabled={loading || gameComplete}
+          onRerollCombo={handleRerollCombo}
+          rerollDisabled={loading || gameComplete || bonusRerollsRemaining === 0}
+          baseRollsRemaining={baseRollsRemaining}
+          bonusRerollsRemaining={bonusRerollsRemaining}
         />
         <FieldPanel slots={slots} />
       </div>

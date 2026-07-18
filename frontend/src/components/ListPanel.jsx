@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { SLOT_LABELS } from '../slots'
 import './ListPanel.css'
 
-const TABS = ['All', 'QB', 'RB', 'WR', 'TE', 'TEAM']
+const TABS = ['All', 'QB', 'RB', 'WR', 'FLEX', 'TEAM']
 
 export default function ListPanel({
   pool,
@@ -14,9 +14,10 @@ export default function ListPanel({
   onPickSlot,
   onPickTeam,
   eligibleSlots,
-  onRerollTeam,
-  onRerollDecade,
+  onRerollCombo,
   rerollDisabled,
+  baseRollsRemaining,
+  bonusRerollsRemaining,
 }) {
   const [tab, setTab] = useState('All')
   const [search, setSearch] = useState('')
@@ -25,7 +26,8 @@ export default function ListPanel({
     if (!pool) return []
     let list = pool.players
     if (tab !== 'All' && tab !== 'TEAM') {
-      list = list.filter((p) => p.position === tab)
+      const positions = tab === 'FLEX' ? ['RB', 'WR', 'TE'] : [tab]
+      list = list.filter((p) => positions.includes(p.position))
     }
     if (search.trim()) {
       const q = search.trim().toLowerCase()
@@ -63,11 +65,11 @@ export default function ListPanel({
               {pool.team.team}
             </div>
             <div className="decade-pill">&lsquo;{String(pool.team.season).slice(-2)}</div>
-            <button className="reroll-chip" onClick={onRerollTeam} disabled={rerollDisabled}>
-              &#8635; Team
-            </button>
-            <button className="reroll-chip" onClick={onRerollDecade} disabled={rerollDisabled}>
-              &#8635; Decade
+            <div style={{ marginLeft: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
+              Rolls: {baseRollsRemaining}/5 • Rerolls: {bonusRerollsRemaining}/2
+            </div>
+            <button className="reroll-chip" onClick={onRerollCombo} disabled={rerollDisabled}>
+              &#8635; Reroll
             </button>
           </>
         )}

@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "Data"
-MODEL_PATH = Path(__file__).resolve().parent.parent / "Modeling" / "random_forest_model.pkl"
+MODEL_PATH = Path(__file__).resolve().parent.parent / "Modeling"
 
 SLOT_ELIGIBILITY = {
     "QB": {"QB"},
@@ -30,9 +30,11 @@ _players_by_team_season = {}
 for p in PLAYERS:
     _players_by_team_season.setdefault((p["season"], p["team"]), []).append(p)
 
-with open(MODEL_PATH, "rb") as f:
+with open(MODEL_PATH / "random_forest_model.pkl", "rb") as f:
     RF_MODEL = pickle.load(f)
 
+with open(MODEL_PATH / "linear_model.pkl", "rb") as f:
+    LINEAR_MODEL = pickle.load(f)
 
 def eligible_slots(position: str) -> list[str]:
     return [slot for slot, allowed in SLOT_ELIGIBILITY.items() if position in allowed]
@@ -77,9 +79,16 @@ def predict_record(base_team_strength: float, qb: dict, rb: dict, wr_a: dict, wr
     ]])
 
     win_pct = float(RF_MODEL.predict(features)[0])
-    win_pct = min(max(win_pct, 0.0), 1.0)
+    win_pct = np.clip(win_pct, 0.0, 1.0)
+
+    linear_win_pct = float(LINEAR_MODEL.predict(features[:, :-1])[0])
+    linear_win_pct = np.clip(linear_win_pct, 0.0, 1.0)
+
+    # blended average with more extreme linear model and more conservative tree model
+    final_win_pct = (0.6 * win_pct) + (0.4 * linear_win_pct)
+    final_win_pct = np.clip(final_win_pct, 0.0, 1.0)
 
     games = 17
-    wins = round(win_pct * games)
+    wins = round(final_win_pct * games)
     losses = games - wins
     return {"win_pct": round(win_pct, 4), "wins": wins, "losses": losses, "record": f"{wins}-{losses}"}

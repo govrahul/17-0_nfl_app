@@ -15,6 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY Server/ Server/
 COPY Modeling/random_forest_model.pkl Modeling/random_forest_model.pkl
+COPY Modeling/linear_model.pkl Modeling/linear_model.pkl
 COPY Data/game_pool.json Data/game_pool.json
 COPY --from=frontend-build /app/frontend/dist frontend/dist
 
