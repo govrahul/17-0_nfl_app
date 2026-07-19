@@ -46,7 +46,11 @@ def roll_team(exclude_ids: set[str], pin_team: str | None = None, pin_season: in
     pin_team: keep the franchise fixed, reroll only the season ("Reroll Decade").
     pin_season: keep the season fixed, reroll only the franchise ("Reroll Team").
     """
-    candidates = [t for t in TEAMS if t["id"] not in exclude_ids]
+    candidates = [
+        t
+        for t in TEAMS
+        if t["id"] not in exclude_ids and _players_by_team_season.get((t["season"], t["team"]), [])
+    ]
     if pin_team is not None:
         candidates = [t for t in candidates if t["team"] == pin_team]
     if pin_season is not None:
@@ -85,10 +89,16 @@ def predict_record(base_team_strength: float, qb: dict, rb: dict, wr_a: dict, wr
     linear_win_pct = np.clip(linear_win_pct, 0.0, 1.0)
 
     # blended average with more extreme linear model and more conservative tree model
-    final_win_pct = (0.6 * win_pct) + (0.4 * linear_win_pct)
-    final_win_pct = np.clip(final_win_pct, 0.0, 1.0)
+    #final_win_pct = (0.6 * win_pct) + (0.4 * linear_win_pct)
+    #final_win_pct = np.clip(final_win_pct, 0.0, 1.0)
+
+    # pick more extreme prediction
+    if abs(win_pct - 0.5) > abs(linear_win_pct - 0.5):
+        final_win_pct = win_pct
+    else:
+        final_win_pct = linear_win_pct
 
     games = 17
     wins = round(final_win_pct * games)
     losses = games - wins
-    return {"win_pct": round(win_pct, 4), "wins": wins, "losses": losses, "record": f"{wins}-{losses}"}
+    return {"win_pct": round(final_win_pct, 4), "wins": wins, "losses": losses, "record": f"{wins}-{losses}"}
